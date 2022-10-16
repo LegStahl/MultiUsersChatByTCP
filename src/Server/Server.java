@@ -1,6 +1,7 @@
 package Server;
 
 import java.io.BufferedReader;
+//import Server.HelpServer;
 import java.io.IOException;
 
 import java.io.InputStreamReader;
@@ -31,11 +32,19 @@ public class Server {
 			
 				Socket clientSocket = serverSocket.accept();
 				
+				System.out.println("Server:35");
+				
 				nameReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 				
 				String clientName = nameReader.readLine();
 				
+				clientName = nameReader.readLine();
+				
 				HelpServer helpServer = new HelpServer(clientSocket, clientName);
+				
+				helpServer.start();
+				
+				System.out.println("Server:47");
 				
 				listOfUsers.put(clientName, helpServer);
 				
@@ -47,21 +56,72 @@ public class Server {
 	}
 	
 	public static void sendAllUsers(HelpServer sender, String message) {
+		String fromWho = new String();
+		for (Map.Entry<String, HelpServer> entry : listOfUsers.entrySet()) {
+			if((entry.getValue().equals(sender))) {
+				fromWho = entry.getKey();
+				break;
+			}
+		}
+		
 		for (Map.Entry<String, HelpServer> entry : listOfUsers.entrySet()) {
 			if(!(entry.getValue().equals(sender))) {
-				entry.getValue().sendMessage(message);
+				entry.getValue().sendMessage("Private " + fromWho + " : " + message);
+				System.out.println("Server:54");
 			}
 			else {
+				System.out.println("Server:57");
 				continue;
+				
 			}
 	    }
 	}
 	
-	public static void sendOneUser(String name, String message) {
+	public static void sendOneUser(String name, HelpServer send,  String message) {
 		HelpServer check = listOfUsers.get(name);
 		if(check != null) {
-			check.sendMessage(message);
+			
+			String fromWho = new String();
+			
+			for (Map.Entry<String, HelpServer> entry : listOfUsers.entrySet()) {
+				
+				if(entry.getValue().equals(send)) {
+					
+					fromWho = entry.getKey();
+					
+					break;
+				
+				}
+			}
+	
+			check.sendMessage("From " + fromWho + ":" + message);
 		}
+		else {
+			
+			send.sendMessage("There is no user witn this name");
+			
+		}
+	}
+	
+	public static void deleteUser(HelpServer user) {
+		
+		String nameUser = new String();
+		
+		for (Map.Entry<String, HelpServer> entry : listOfUsers.entrySet()) {
+			
+			if(entry.getValue().equals(user)) {
+				
+				nameUser = entry.getKey();
+				
+				break;
+			
+			}
+		}
+		
+		sendAllUsers(user, "has left the chat");
+		
+		listOfUsers.remove(nameUser);
+		
 	}
 	
 }

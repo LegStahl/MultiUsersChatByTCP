@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import Server.Server;
+
 
 public class HelpServer extends Thread {
 	
@@ -35,9 +37,35 @@ public class HelpServer extends Thread {
 	
 	public void run() {
 		String message;
+		String nameToSend = new String();
+		String newMessage = new String();
 		try {
 			while((message = in.readLine()) != null) {
+				String check = SpecialProtocol.checkMessage(message);
 				
+				if(check == "oneuser") {
+					for(int i = message.indexOf(" ") + 1; message.charAt(i) != ' '; i++) {
+						nameToSend = nameToSend + message.charAt(i);
+					}
+					for(int i = message.indexOf(":") + 1; message.charAt(i) != '#'; i++) {
+						newMessage = newMessage + message.charAt(i);
+					}
+					
+						Server.sendOneUser(nameToSend, this, newMessage);
+				}
+				else if(check == "bye") {
+					
+					Server.deleteUser(this);
+					
+					socket.close();
+					
+					in.close();
+					
+					out.close();
+				}
+				else {
+					Server.sendAllUsers(this, message);
+				}
 			}
 		}catch(IOException e) {
 			System.out.println(e.getMessage());
